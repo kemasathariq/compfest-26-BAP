@@ -1,0 +1,2418 @@
+{
+  "name": "Dispatcher",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "public",
+          "mode": "list",
+          "cachedResultName": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "master_branch_route",
+          "mode": "list",
+          "cachedResultName": "master_branch_route"
+        },
+        "limit": 1,
+        "where": {
+          "values": [
+            {
+              "column": "branch_code",
+              "value": "={{ $json.branchCode }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -192,
+        -384
+      ],
+      "id": "719293f2-10e7-4ff2-9da1-954938a16156",
+      "name": "SelectWAGroup",
+      "credentials": {
+        "postgres": {
+          "id": "mhN5H7asJQ4STqAA",
+          "name": "Postgres Aura"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select\n\tDISTINCT(mvuru.user_id),\n\tmvuru.user_name ,\n\tmvuru.user_email,\n\tmbp.dispatch_role,\n\tmbp.branch_code ,\n\tmbp.is_active,\n\tmvuru.user_phone_number,\n    mvuru.user_npk,\n\tmvuru.user_windows_uid\n    \nfrom\n\tmaster_branch_pic mbp\nleft join materialized_view_user_role_unit mvuru on\n\tmbp.user_id = mvuru.user_id\nwhere\n\tmbp.is_active = true\nand mvuru.application_code = 'aura'\nand mbp.branch_code = '{{ $('When Executed by Another Workflow').item.json.branchCode }}'\nand mbp.dispatch_role = '{{ $('Edit Fields').item.json.target }}'",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2816,
+        144
+      ],
+      "id": "5796d63a-d431-4c1d-84ab-9475ddaff247",
+      "name": "SelectPICRelated",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "mhN5H7asJQ4STqAA",
+          "name": "Postgres Aura"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://ospstg-api.astra.co.id/aura_n8n/webhook/bebf5393-f8f6-4327-9c3d-7d0571f39905",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "=target",
+              "value": "={{ $('Map Template').item.json.target }}"
+            },
+            {
+              "name": "reason",
+              "value": "={{ $('Map Template').item.json.reason }}"
+            },
+            {
+              "name": "summary",
+              "value": "={{ $('Map Template').item.json.summary }}"
+            },
+            {
+              "name": "customerName",
+              "value": "={{ $('Map Template').item.json.customerName }}"
+            },
+            {
+              "name": "customerPhone",
+              "value": "={{ $('Map Template').item.json.customerPhone }}"
+            },
+            {
+              "name": "dateTime",
+              "value": "={{ $('Map Template').item.json.dateTime }}"
+            },
+            {
+              "name": "targetPIC",
+              "value": "={{ $('Map Template').item.json.targetPIC }}"
+            },
+            {
+              "name": "branchName",
+              "value": "={{ $json.group_name }}"
+            },
+            {
+              "name": "to",
+              "value": "={{ $json.wa_group_id }}"
+            },
+            {
+              "name": "branchCode",
+              "value": "={{ $json.branch_code }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        192,
+        -384
+      ],
+      "id": "afd27224-6dd6-4af2-af43-721692be09ee",
+      "name": "Send Group"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://sapdevproxy.astra.co.id/lms/createleadgen?sap-client=140",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "CompanyCode",
+              "value": "0002"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        240,
+        -144
+      ],
+      "id": "c0d54909-0584-422c-96b4-fd9b86a15a4a",
+      "name": "Create Leads",
+      "alwaysOutputData": true,
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "XdSUQTGs3PyjcOSi",
+          "name": "LMS"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "chatbot_summary",
+          "mode": "list",
+          "cachedResultName": "chatbot_summary"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "inquiry_group": "={{ $('Edit Fields').item.json.category }}",
+            "inquiry_type": "={{ $('Edit Fields').item.json.inquiryType }}",
+            "conversation_id": "={{ $json.ConversationId }}",
+            "message_id": "={{ $json.wa_id }}",
+            "phone_no": "={{ $json.customerPhone }}",
+            "customer_name": "={{ $json.customerName }}",
+            "initial_question": "={{ $json.InitialQuestion }}",
+            "summary": "={{ $json.summary }}",
+            "next_action": "={{ $json.NextAction }}",
+            "consent": "={{ $json.Consent }}",
+            "status": "Open",
+            "created_by": "TASIA",
+            "created_time": "={{ $now }}",
+            "leads_id": "={{ $if($(\"Mapfield SupleadsActver\").isExecuted, $(\"Mapfield SupleadsActver\").item.json.LeadID, \"\") }}",
+            "assign_role": "={{ $('Edit Fields').item.json.target }}",
+            "branch_code": "={{ $json.branchCode }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "inquiry_group",
+              "displayName": "inquiry_group",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "inquiry_type",
+              "displayName": "inquiry_type",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "conversation_id",
+              "displayName": "conversation_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "message_id",
+              "displayName": "message_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "leads_id",
+              "displayName": "leads_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "phone_no",
+              "displayName": "phone_no",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "customer_name",
+              "displayName": "customer_name",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "nopol",
+              "displayName": "nopol",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "initial_question",
+              "displayName": "initial_question",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "summary",
+              "displayName": "summary",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "consent",
+              "displayName": "consent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "next_action",
+              "displayName": "next_action",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "follow_up_time",
+              "displayName": "follow_up_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "follow_up_by",
+              "displayName": "follow_up_by",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "solved_time",
+              "displayName": "solved_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "solved_by",
+              "displayName": "solved_by",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "created_time",
+              "displayName": "created_time",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_by",
+              "displayName": "created_by",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "last_modified_time",
+              "displayName": "last_modified_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "last_modified_by",
+              "displayName": "last_modified_by",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "assign_role",
+              "displayName": "assign_role",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "branch_code",
+              "displayName": "branch_code",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2352,
+        144
+      ],
+      "id": "21a74a3b-9021-4959-a27e-b199680c4668",
+      "name": "Insert ChatbotSummary Table",
+      "credentials": {
+        "postgres": {
+          "id": "mhN5H7asJQ4STqAA",
+          "name": "Postgres Aura"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://astraapigc-dev.astra.co.id/sap-hana/API/LMS_TSO/SupplyLeads",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Get Token SupleadsActVerif').first().json.access_token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($('Map Supleads').first().json) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2160,
+        -608
+      ],
+      "id": "2876b5bd-9595-4a93-a086-b91beed71865",
+      "name": "SuppLeads"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.category }}",
+                    "rightValue": "leads",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "16414a49-3877-4b6c-baf6-15a24543c3c0"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Leads"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "e3d91bcb-4824-438f-9f98-0c11ed9a3319",
+                    "leftValue": "={{ $json.category }}",
+                    "rightValue": "=inquiry",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Inquiry"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -272,
+        112
+      ],
+      "id": "f55da85e-4b7e-4aa4-aa86-8cae74c464e9",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $('When Executed by Another Workflow').all();\n\nconst now = new Date();\nconst formattedDate =\n  now.toLocaleDateString('id-ID', {\n    day: '2-digit',\n    month: 'long',\n    year: 'numeric',\n    timeZone: 'Asia/Jakarta'\n  }) +\n  ', ' +\n  now.toLocaleTimeString('id-ID', {\n    hour: '2-digit',\n    minute: '2-digit',\n    hour12: false,\n    timeZone: 'Asia/Jakarta'\n  });\n\nfor (const item of items) {\n  const body = item.json.body ?? item.json;\n\n  const template = `*🔔 Inquiry Baru dari TASIA*\n━━━━━━━━━━━━━━━━\n📅 Waktu: ${formattedDate}\n👤 Customer: ${body.customerName}\n📱 Telepon: ${body.customerPhone}\n🏢 Cabang: ${body.branchCode}\n📋 Tipe: ${body.InquiryType}\n📋 *Ringkasan:*\n${body.summary}\n━━━━━━━━━━━━━━━━\nMohon segera follow-up customer ini.`;\n\n  item.json = {\n    ...body,\n    notification: template,\n    dateTime: formattedDate,\n    inquiryType: body.inquiryType,\n    initialQuestion: body.initialQuestion,\n    consent: body.consent,\n    nextAction: body.nextAction,\n    policeRegNo: body.PoliceRegNo,\n    messageId: body.messageId,\n    conversationId: body.conversationId\n  };\n}\nreturn items;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2144,
+        32
+      ],
+      "id": "6fa96c19-4ce0-4bb7-8e62-ed2820c69fa2",
+      "name": "Map Template"
+    },
+    {
+      "parameters": {
+        "jsCode": "//const createLeadsResponse = $('Create Leads').first().json;\nconst picData = $('SelectPICRelated1').first().json;\nconst webhookInput = $('Webhook').first().json.body;\nconst now = $now.toISO();\nconst formatDate = (date) => {\n  const d = new Date(date);\n  const day = String(d.getDate()).padStart(2, '0');\n  const month = String(d.getMonth() + 1).padStart(2, '0');\n  const year = d.getFullYear();\n  return `${day}-${month}-${year}`;\n};\n\nconst leadID = $('Create Leads').first().json.leadNo;\n\nreturn [{\n  json: {\n    PreferredDateToContacted: \"\",\n    CreatedDate: formatDate(new Date()),\n    LeadID: leadID,\n    Title: \"Mr\",\n    QuestionnaireCode: \"\",\n    GeneralClassificationCode: \"\",\n    SourceClassementCode: \"\",\n    SourceCode: \"\",\n    SourceDetailCode: \"\",\n    Description: \"\",\n    Name1: webhookInput.customerName,\n    Phone1: webhookInput.customerPhone,\n    Phone2: webhookInput.customerPhone,\n    Email1: \"nan@nan.nan\",\n    ProspectVariant: \"\",\n    PurchasePeriod: \"\",\n    RegionCode: \"\",\n    AreaCode: \"DKI1\",\n    CityCode: \"0013\",\n    BusinessAreaCode: webhookInput.branchCode,\n    Address1: \"\",\n    Kelurahan: \"\",\n    Kecamatan: \"\",\n    KabupatenKota: \"\",\n    Provinsi: \"\",\n    PaymentMethod: \"\",\n    Program: \"\",\n    PeriodeTenor: \"\",\n    TestDriveDate: \"1900-01-01 00:00:00.000\",\n    SalesmanNo: \"00025386\",\n    MerkMobilLama: \"\",\n    ModelMobilLama: \"\",\n    SilinderMobilLama: \"\",\n    TipeMobilLama: \"\",\n    TransmisiMobilLama: \"\",\n    TahunPembuatanMobilLama: \"\",\n    BahanBakarMobilLama: \"\",\n    PenggerakMobilLama: \"\",\n    WarnaMobilLama: \"\",\n    VINMobilLama: \"\",\n    AppraisalDate: \"1900-01-01 00:00:00.000\",\n    AppointmentDate: \"1900-01-01 00:00:00.000\",\n    AppointmentLocation: \"\",\n    PromoCode: \"\",\n    DP: 0,\n    Tenor: \"\",\n    StatusCode: \"E0001\",\n    CabangPembelian: \"\",\n    TahunPembelian: \"\",\n    VariantPembelian: \"\",\n    DropReasonCode: \"\",\n    LimitWAAttempt: 7,\n    CurrentWAAttempt: 1,\n    RemainingWAAttempt: 6,\n    LimitCallAttempt: 7,\n    CurrentCallAttempt: 7,\n    RemainingCallAttempt: 7,\n    LimitDays: 7,\n    CurrentDays: 0,\n    RemainingDays: 1,\n    LeadScoring: 0,\n    NewLead: \"true\",\n    LeadPriority: 7,\n    VerificatorNotes: \"Customer berminat membeli mobil\",\n    ExpiredLead: \"9999-12-31 00:00:00.000\",\n    SourceSystemNo: leadID,\n    SourceSystem: \"LIVECHAT\"\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1968,
+        -608
+      ],
+      "id": "74e49081-27cf-4c70-81df-28f215a494f6",
+      "name": "Map Supleads"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $('When Executed by Another Workflow').first().json;\nreturn [{\n  json: {\n    AssignmentUserGroup: \"LIVECHAT\",\n    datas: [\n      {\n        Title: \"Mr\",\n        Name1: \"No Name\",\n        Phone1: input.customerPhone,\n        Email1: \"nan@nan.nan\",\n        Address1: \"\",\n        Kelurahan: \"\",\n        Kecamatan: \"\",\n        KabupatenKota: \"\",\n        PostalCode: \"\",\n        Province: \"\",\n        AreaCode: \"\",\n        CityCode: \"\",\n        PreferredDateToContacted: \"\",\n        ProspectVariant: \"\",\n        Notes1: \"\",\n        Program: \"\",\n        BusinessAreaCode: input.branchCode,\n        SalesmanNo: \"\",\n        SourceCreatedTime: $now.toISO(),\n        SourceSystemNo: \"\",\n        SourceSystem: \"LIVECHAT\",\n        SourceCategoryCode: \"13\",\n        SourceCode: \"21\",\n        SourceDetailCode: \"S13\",\n        CompanyCodeCode: \"0002\",\n        Status: \"\",\n        UserGroup: \"LIVECHAT\",\n        isotpverified: true,\n        PurchasePeriod: \"\",\n        DropReasonCode: \"\"\n      }\n    ]\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -16,
+        -144
+      ],
+      "id": "2d720ac7-54bd-4362-a628-0644a7894ee3",
+      "name": "Map Create Leads"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"status\": \"success\",\n  \"data\":\"\",\n  \"message\": \"Berhasil Dispatch\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4384,
+        416
+      ],
+      "id": "a56e8895-0294-4693-b97c-086b0c35c5b8",
+      "name": "Success Response"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"status\": \"Failed\",\n  \"data\":\"\",\n  \"message\": \"Failed Dispatch category must be 'leads' or 'inquiry' \"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -32,
+        512
+      ],
+      "id": "3f3b8d4a-d200-4b82-b1b1-886ed55499c4",
+      "name": "Failed Response"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        4640,
+        416
+      ],
+      "id": "1dfc71b7-fbb1-4e2f-aa87-f4323afea150",
+      "name": "Respond to Webhook Success"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        208,
+        512
+      ],
+      "id": "a8ed84ec-b762-48fa-ada3-566977d4541f",
+      "name": "Respond to Webhook Failed"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://ish.astra.co.id/sandbox/whatsapp/v1/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "content-type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.payload) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        3664,
+        144
+      ],
+      "id": "79f4d5d4-648e-44de-85d8-6331a7bc7e22",
+      "name": "Send MessagePIC",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "value": "public",
+          "mode": "list",
+          "cachedResultName": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "master_branch_route",
+          "mode": "list",
+          "cachedResultName": "master_branch_route"
+        },
+        "limit": 1,
+        "where": {
+          "values": [
+            {
+              "column": "branch_code",
+              "value": "={{ $('When Executed by Another Workflow').item.json.branchCode }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        3216,
+        416
+      ],
+      "id": "ad78e496-2f09-438b-b592-e9d36dfa12ff",
+      "name": "SelectWAGroup1",
+      "credentials": {
+        "postgres": {
+          "id": "mhN5H7asJQ4STqAA",
+          "name": "Postgres Aura"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "H_wQUxggJl5df3prrfCXc",
+          "mode": "list",
+          "cachedResultUrl": "/aura_n8n/workflow/H_wQUxggJl5df3prrfCXc",
+          "cachedResultName": "Orion Auth Token Aura"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        3024,
+        144
+      ],
+      "id": "0f3fceec-96f5-4be3-8944-1ba3a208aff6",
+      "name": "Call 'Orion Auth Token Group'"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://ish.astra.co.id/sandbox/whatsapp/v1/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "content-type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer  {{ $('Call \\'Orion Auth Token Group\\'').item.json.access_token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.payload) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        3728,
+        416
+      ],
+      "id": "1300ce04-d71f-47bf-8d34-a5602d4e3970",
+      "name": "Send MessageGroup"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select \n DISTINCT(mvuru.user_id),\n mvuru.user_name ,\n mvuru.user_email,\n mvuru.user_phone_number,\n    mvuru.user_npk,\n mvuru.user_windows_uid,\n mvuru.role_code,\n mvuru.branch_code\nfrom materialized_view_user_role_unit mvuru\nwhere mvuru.user_status = 'Active'\nand mvuru.application_code = 'aura'\nand mvuru.user_phone_number is not null\nand lower(mvuru.role_code) = '{{ $('Edit Fields').item.json.target }}'\nand mvuru.branch_code = '{{ $('When Executed by Another Workflow').item.json.branchCode }}';",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        464,
+        -144
+      ],
+      "id": "c82f0c08-0d18-48f8-be95-a7bb34ca2cd8",
+      "name": "SelectPICRelated1",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "mhN5H7asJQ4STqAA",
+          "name": "Postgres Aura"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "44e5c2cc-7dd0-4941-b0c9-dbe551ce7577",
+              "leftValue": "={{ $json.Status }}",
+              "rightValue": "Failed",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1808,
+        -144
+      ],
+      "id": "88a3af29-916c-407f-923e-778e0a23d46c",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "amount": 15
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2144,
+        -320
+      ],
+      "id": "482ebba2-d5f1-4737-8f83-e7b21b0d02e3",
+      "name": "Wait",
+      "webhookId": "bb1422e4-63ec-471a-a091-8c65a205c00f"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://astraapigc-dev.astra.co.id/sap-hana/lms_tso/SUPLEADS_ACTVER",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Get Token SupleadsActVerif').first().json.access_token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{  $('Map Supleads').first().json }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2288,
+        -320
+      ],
+      "id": "cc2a064a-83b8-4772-9a91-60519869df74",
+      "name": "SuppLeads1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "4602f0a7-2177-4cd3-a849-192eee6a5f7f",
+              "leftValue": "={{ $json.Status }}",
+              "rightValue": "Failed",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2448,
+        -320
+      ],
+      "id": "d427b22b-605f-4995-8b3a-1d2629519bec",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "amount": 15
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2672,
+        -432
+      ],
+      "id": "2cadaea6-4834-4f96-8e31-eaf2e6e3ee36",
+      "name": "Wait1",
+      "webhookId": "bb1422e4-63ec-471a-a091-8c65a205c00f"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://astraapigc-dev.astra.co.id/sap-hana/lms_tso/SUPLEADS_ACTVER",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Get Token SupleadsActVerif').first().json.access_token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{  $('Map Supleads').first().json }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2832,
+        -432
+      ],
+      "id": "cbcf2c78-511d-41de-aa13-187dae9bf25a",
+      "name": "SuppLeads2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "99d8808d-d0b3-4259-a2b8-ee9655497cfc",
+              "leftValue": "={{ $json.Status }}",
+              "rightValue": "Failed",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2992,
+        -432
+      ],
+      "id": "95884bb3-66f8-4d3c-8b28-54758cfae33c",
+      "name": "If2"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        2928,
+        416
+      ],
+      "id": "3974f302-4b2d-48a5-8391-9e4e8a84ca7e",
+      "name": "Limit"
+    },
+    {
+      "parameters": {
+        "jsCode": "const pics = $('SelectPICRelated').all();\nconst webhook = $('When Executed by Another Workflow').first().json;\nconst summaryId = $('Insert ChatbotSummary Table').first().json.id;\nconst token = $input.first().json.access_token;\nconst judulMap = {\n  'konsultasi pembelian mobil': 'KONSULTASI PEMBELIAN MOBIL',\n  'konsultasi workshop': 'KONSULTASI SERVICE',\n  'konsultasi home service': 'KONSULTASI SERVICE',\n  'konsultasi bp': 'KONSULTASI SERVICE',\n  'komplain': 'LAPORAN KOMPLAIN CUSTOMER',\n  'leads': 'INQUIRY PENAWARAN MOBIL',\n  'stnk' : \"REQUEST PENJADWALAN AMBIL STNK\", \n  'part' : 'REQUEST PENGAMBILAN / PEMASANGAN PART',\n  'konsultasi trade in': 'KONSULTASI TRADE IN'\n};\nconst targetMap = {\n  'sa': 'Service Advisor',\n  'crc': 'CRC',\n  'sales': 'Sales',\n  'bp_advisor': 'BP Advisor',\n  'partman': 'Part Man',\n  'trade_in': 'Trade In',\n};\nconst editFields = $('Edit Fields').first().json;\nconst judul = judulMap[(editFields.inquiryType || '').toLowerCase()] || 'KONSULTASI UMUM';\nconst target = targetMap[(editFields.target || '').toLowerCase()] || editFields.target || '-';\nconst now = new Date();\nconst tanggal = now.toLocaleString('id-ID', {\n  weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',\n  hour: '2-digit', minute: '2-digit',\n  timeZone: 'Asia/Jakarta'\n}).replace('.', '.') + ' WIB';\nconst phone = String(webhook.customerPhone || '').replace(/^\\+?62/, '0');\nreturn pics.map(pic => ({\n  json: {\n    token: token,\n    payload: {\n      to: pic.json.user_phone_number,\n      type: \"template\",\n      template: {\n        name: \"aura_btn_followup\",\n        language: {\n          policy: \"deterministic\",\n          code: \"id\"\n        },\n        components: [\n          {\n            type: \"body\",\n            parameters: [\n              { type: \"text\", text: String(judul || '-') },\n              { type: \"text\", text: String(tanggal || '-') },\n              { type: \"text\", text: String(webhook.customerName || '-') },\n              { type: \"text\", text: String(phone || '-') },\n              { type: \"text\", text: String(webhook.InitialQuestion || '-') },\n              { type: \"text\", text: String(webhook.summary || '-').replace(/\\n/g, ' | ').replace(/• /g, '') },\n              { type: \"text\", text: String(webhook.Consent || '-') },\n              { type: \"text\", text: String(webhook.NextAction || '-').replace(/\\n/g, ' | ').replace(/• /g, '') },\n              { type: \"text\", text: \"🟡 Menunggu Tindak Lanjut \" + target }\n            ]\n          },\n          {\n            type: \"button\",\n            sub_type: \"quick_reply\",\n            index: \"0\",\n            parameters: [\n              {\n                type: \"payload\",\n                payload: \"aura-btn-followup id:\" + summaryId + \" category:\" + $('Edit Fields').first().json.category + \" uid:\" + $('SelectPICRelated').first().json.user_windows_uid + \" branchCode:\" + webhook.branchCode\n              }\n            ]\n          }\n        ]\n      }\n    }\n  }\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3216,
+        144
+      ],
+      "id": "8c4a5ba0-6c6b-4706-a0a1-22edfd8d26a8",
+      "name": "Map Item For Each PIC"
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "=reminderFollowUp:{{ $('Insert ChatbotSummary Table').item.json.id }}:{{ $('When Executed by Another Workflow').item.json.branchCode }}",
+        "value": "={{ $('When Executed by Another Workflow').item.json.wa_id }}",
+        "expire": true,
+        "ttl": 300
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        4112,
+        -64
+      ],
+      "id": "3fc5ce08-6428-4a0c-a027-4c2f9fcaf81b",
+      "name": "set reminderFollowUp",
+      "credentials": {
+        "redis": {
+          "id": "vvvwRzGFxtx7k9bq",
+          "name": "Redis"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const webhook = $('When Executed by Another Workflow').first().json;\nconst token = $input.first().json.access_token;\nconst judulMap = {\n  'konsultasi pembelian mobil': 'KONSULTASI PEMBELIAN MOBIL',\n  'konsultasi workshop': 'KONSULTASI SERVICE',\n  'konsultasi home service': 'KONSULTASI SERVICE',\n  'konsultasi bp': 'KONSULTASI SERVICE',\n  'komplain': 'LAPORAN KOMPLAIN CUSTOMER',\n  'leads': 'INQUIRY PENAWARAN MOBIL',\n  'konsultasi trade in': 'KONSULTASI TRADE IN'\n};\nconst targetMap = {\n  'sa': 'Service Advisor',\n  'crc': 'CRC',\n  'sales': 'Sales',\n  'bp_advisor': 'BP Advisor',\n  'partman': 'Part Man',\n  'trade_in': 'Trade In',\n};\nconst editFields = $('Edit Fields').first().json;\nconst judul = judulMap[(editFields.inquiryType || '').toLowerCase()] || 'KONSULTASI UMUM';\nconst target = targetMap[(editFields.target || '').toLowerCase()] || editFields.target || '-';\nconst now = new Date();\nconst tanggal = now.toLocaleString('id-ID', {\n  weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',\n  hour: '2-digit', minute: '2-digit',\n  timeZone: 'Asia/Jakarta'\n}).replace('.', '.') + ' WIB';\nconst phone = String(webhook.customerPhone || '').replace(/^\\+?62/, '0');\nreturn [{\n  json: {\n    token: token,\n    payload: {\n      to: String($input.first().json.wa_group_id),\n      recipient_type: \"group\",\n      type: \"template\",\n      template: {\n        name: \"aura_general_no_btn\",\n        language: {\n          policy: \"deterministic\",\n          code: \"id\"\n        },\n        components: [\n          {\n            type: \"body\",\n            parameters: [\n              { type: \"text\", text: String(judul || '-') },\n              { type: \"text\", text: String(tanggal || '-') },\n              { type: \"text\", text: String(webhook.customerName || '-') },\n              { type: \"text\", text: String(phone || '-') },\n              { type: \"text\", text: String(webhook.InitialQuestion || '-') },\n              { type: \"text\", text: String(webhook.summary || '-').replace(/\\n/g, ' | ').replace(/• /g, '') },\n              { type: \"text\", text: String(webhook.Consent || '-') },\n              { type: \"text\", text: String(webhook.NextAction || '-').replace(/\\n/g, ' | ').replace(/• /g, '') },\n              { type: \"text\", text: \"🟡 Menunggu Tindak Lanjut \" + target }\n            ]\n          }\n        ]\n      }\n    }\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3424,
+        416
+      ],
+      "id": "28d6efb3-215d-43ef-9151-5ec60a144054",
+      "name": "Map Item for group"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "ae933fa3-afb9-4e24-923d-c34be42d584f",
+              "leftValue": "={{ !!$json.branchCode }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "ab27cfab-eb26-410a-b0f4-f0f5383bf578",
+              "leftValue": "={{ $json.branchCode }}",
+              "rightValue": "Empty",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -848,
+        144
+      ],
+      "id": "11ca3dc6-c1d3-4d9a-9e86-4aef142c19e6",
+      "name": "Check branchCode Validation"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"status\": \"Failed\",\n  \"data\":\"\",\n  \"message\": \"Branch Code Is Required \"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -480,
+        512
+      ],
+      "id": "d48a4388-1971-4e5e-bb48-3eddc1c69810",
+      "name": "Failed Response1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -224,
+        512
+      ],
+      "id": "79fbee32-7f44-4222-908b-f31ddb92306d",
+      "name": "Respond to Webhook Failed1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "ae933fa3-afb9-4e24-923d-c34be42d584f",
+              "leftValue": "={{ !!$json.Consent && $json.Consent.toLowerCase() === 'yes' }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1184,
+        160
+      ],
+      "id": "4c1e282d-aa63-46d0-89bd-bfde435a4a6c",
+      "name": "Check branchCode Validation1"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"status\": \"Failed\",\n  \"data\":\"\",\n  \"message\": \"Consent('yes') is required, must ask customer for consent\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -896,
+        512
+      ],
+      "id": "70d0a1e2-0aec-42bb-b254-93652f9e6b2c",
+      "name": "Failed Response2"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -688,
+        512
+      ],
+      "id": "c76f7883-8492-4efe-b154-16ff777f3169",
+      "name": "Respond to Webhook Failed2"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"status\": \"Dispatch Failed\",\n  \"data\":\"\",\n  \"message\": \"No PIC To Dispatch\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3936,
+        160
+      ],
+      "id": "303427c2-5ea7-464d-94ae-b6c8764e6217",
+      "name": "Failed Response3"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        4464,
+        144
+      ],
+      "id": "58d86a86-4c8a-4349-8da2-abb65ae99e8d",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "jsCode": "//const createLeadsResponse = $('Create Leads').first().json;\nconst picData = $('SelectPICRelated1').first().json;\nconst webhookInput = $('Webhook').first().json.body;\nconst now = $now.toISO();\nconst formatDate = (date) => {\n  const d = new Date(date);\n  const day = String(d.getDate()).padStart(2, '0');\n  const month = String(d.getMonth() + 1).padStart(2, '0');\n  const year = d.getFullYear();\n  return `${day}-${month}-${year}`;\n};\n\nconst leadID = $('Create Leads').first().json.leadNo;\n\nreturn [{\n  json: {\n    LeadID : leadID,\n    AttemptNumber: \"1\",\n    AgentName: picData.user_name,\n    AgentID: picData.user_windows_uid,\n    StatusCode: \"E0001\",\n    AttemptChannel: \"B\",\n    AttemptStatusCode: \"A\",\n    AttemptDuration: 15,\n    AttemptDateFrom: now,\n    AttemptDateTo: \"\",\n    AttemptResultCode: \"\",\n    AttemptNotes: \"Customer berminat untuk beli unit\",\n    CallRecording: \"\",\n    WAChat: \"\",\n    DropReasonCode:\"\",\n    NextActivitySchedule: \"1900-01-01T00:00:00.000Z\"\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1568,
+        -608
+      ],
+      "id": "23f15fcf-f9e3-4f6e-80ee-0f4446963dac",
+      "name": "Mapfields ActVerif"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://astraapigc-dev.astra.co.id/sap-hana/API/LMS_TSO/ActVerification",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Get Token SupleadsActVerif').first().json.access_token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($('Mapfields ActVerif').first().json) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1776,
+        -608
+      ],
+      "id": "3ac96ff8-0949-4c7e-ad94-634860a5f5c3",
+      "name": "ActVerification"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "master_branch_route",
+          "mode": "list",
+          "cachedResultName": "master_branch_route"
+        },
+        "limit": 1,
+        "where": {
+          "values": [
+            {
+              "column": "branch_code",
+              "value": "={{ $('When Executed by Another Workflow').item.json.branchCode }}"
+            }
+          ]
+        },
+        "options": {
+          "outputColumns": [
+            "branch_type"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        560,
+        128
+      ],
+      "id": "e1cdbc0f-2a8a-4b55-be3e-5ce2482d90b8",
+      "name": "Get Branch",
+      "credentials": {
+        "postgres": {
+          "id": "mhN5H7asJQ4STqAA",
+          "name": "Postgres Aura"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "82475f37-3663-4bea-ba56-160b40976f63",
+              "leftValue": "={{ $('Edit Fields').item.json.target }}",
+              "rightValue": "bp_advisor",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "4182795d-fe3c-46a4-b114-6ac8752bebe0",
+              "leftValue": "={{ $json.branch_type }}",
+              "rightValue": "BP",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        736,
+        128
+      ],
+      "id": "e33cab8a-1c51-4c5d-a5d6-38c6e632567e",
+      "name": "Check BP & GR"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"status\": \"Failed to Dispatch\",\n  \"data\":\"\",\n  \"message\": \"Branch to dispatch is not Body Paint Specialist, Please ask user to choose another branch\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1280,
+        32
+      ],
+      "id": "81d49804-7d9f-4591-a0cc-4fe938c812eb",
+      "name": "Failed Response4"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1472,
+        240
+      ],
+      "id": "346525f2-bd76-42b1-9a49-6d6139be4a40",
+      "name": "Respond to Webhook Failed3"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select\n\tDISTINCT(mvuru.user_id),\n\tmvuru.user_name ,\n\tmvuru.user_email,\n\tmbp.dispatch_role,\n\tmbp.branch_code ,\n\tmbp.is_active,\n\tmvuru.user_phone_number,\n    mvuru.user_npk,\n\tmvuru.user_windows_uid\n    \nfrom\n\tmaster_branch_pic mbp\nleft join materialized_view_user_role_unit mvuru on\n\tmbp.user_id = mvuru.user_id\nwhere\n\tmbp.is_active = true\nand mvuru.application_code = 'aura'\nand mbp.branch_code = 'T002'\nand mbp.dispatch_role = 'sa'",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        576,
+        -512
+      ],
+      "id": "3a933e17-c848-4a94-b9a2-86265856c116",
+      "name": "SelectPICRelated2",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "mhN5H7asJQ4STqAA",
+          "name": "Postgres Aura"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ad9f893d-f41d-447d-8c26-c8e6d3a184c2",
+              "name": "category",
+              "value": "={{\n($json.InquiryType.toLowerCase() === \"leads\" ? \"leads\"\n: $json.InquiryType.toLowerCase() === \"konsultasi pembelian mobil leads\" ? \"leads\"\n: $json.InquiryType.toLowerCase() === \"konsultasi trade in\" ? \"leads\"\n: \"inquiry\")\n}}",
+              "type": "string"
+            },
+            {
+              "id": "38f38d2f-0500-493a-9152-3284460ecfc1",
+              "name": "target",
+              "value": "={{\n($json.InquiryType.toLowerCase() === \"leads\" ? \"sales\"\n: $json.InquiryType.toLowerCase() === \"konsultasi pembelian mobil leads\" ? \"sales\"\n: $json.InquiryType.toLowerCase() === \"konsultasi pembelian mobil inquiry\" ? \"sales\"\n: $json.InquiryType.toLowerCase() === \"konsultasi trade in\" ? \"trade_in\"\n: $json.InquiryType.toLowerCase() === \"konsultasi workshop\" ? \"sa\"\n: $json.InquiryType.toLowerCase() === \"konsultasi home service\" ? \"sa\"\n: $json.InquiryType.toLowerCase() === \"konsultasi bp\" ? \"bp_advisor\"\n: $json.InquiryType.toLowerCase() === \"komplain\" ? \"crc\"\n: $json.InquiryType.toLowerCase() === \"part\" ? \"crc\"\n: $json.InquiryType.toLowerCase() === \"stnk\" ? \"crc\"\n: \"sa\"\n)\n}}",
+              "type": "string"
+            },
+            {
+              "id": "b40c1c59-9167-474f-b313-6d723c13d4b5",
+              "name": "inquiryType",
+              "value": "={{ $json.InquiryType.includes(\"Konsultasi Pembelian Mobil\") ? \"Konsultasi Pembelian Mobil\" : $json.InquiryType }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -544,
+        128
+      ],
+      "id": "9e0d4ea4-2b5d-496a-a105-bd4763821936",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "c96c88a3-87a9-4e13-b2ea-83bb374a5a22",
+              "leftValue": "={{ $json.error }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notExists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        368,
+        -320
+      ],
+      "id": "3fd4a5ea-646e-422a-9fea-c18f0f21dd74",
+      "name": "Create leads id success?"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        688,
+        -304
+      ],
+      "id": "c65afa69-2bf5-4d78-ab11-2f2965f19711",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://devapphn1.corp.ai.astra.co.id:8043/lms_tso/SUPLEADS_ACTVER?sap-client=140",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"PreferredDateToContacted\": \"\",\n  \"CreatedDate\": \"2025-11-27 13:15:43\",\n  \"LeadID\": \"2000481864\",\n  \"Title\": \"0003\",\n  \"QuestionnaireCode\": \"TEST LIVECHAT\",\n  \"GeneralClassificationCode\": \"\",\n  \"SourceClassementCode\": \"\",\n  \"SourceCode\": \"\",\n  \"SourceDetailCode\": \"E11\",\n  \"Description\": \"\",\n  \"Name1\": \"LIVECHAT TEST SUPLEADS_ACTVER 2701\",\n  \"Phone1\": \"081122223913\",\n  \"Phone2\": \"\",\n  \"Email1\": \"LiveChat.plp@mail.com\",\n  \"ProspectVariant\": \"Innova Zenix Hybrid\",\n  \"PurchasePeriod\": \"0 – 1 bulan\",\n  \"RegionCode\": \"\",\n  \"AreaCode\": \"\",\n  \"CityCode\": \"\",\n  \"BusinessAreaCode\": \"\",\n  \"Address1\": \"Jalan Merdeka\",\n  \"Kelurahan\": \"Bangka\",\n  \"Kecamatan\": \"Mampang\",\n  \"KabupatenKota\": \"Jakarta Timur\",\n  \"Provinsi\": \"01\",\n  \"PaymentMethod\": \"Credit\",\n  \"Program\": \"Program Live Chat Update flow\",\n  \"PreferredAttemptChannel\": \"\",\n  \"PeriodeTenor\": \"24 Bulan\",\n  \"TestDriveDate\": \"2025-11-28 10:30:00\",\n  \"SalesmanNo\": \"00006024\",\n  \"MerkMobilLama\": \"Toyota\",\n  \"ModelMobilLama\": \"Avanza\",\n  \"SilinderMobilLama\": \"V-cylinder\",\n  \"TipeMobilLama\": \"Avanza X\",\n  \"TransmisiMobilLama\": \"Matic\",\n  \"TahunPembuatanMobilLama\": \"2020\",\n  \"BahanBakarMobilLama\": \"Bensin\",\n  \"PenggerakMobilLama\": \"4WD\",\n  \"WarnaMobilLama\": \"Merah\",\n  \"VINMobilLama\": \"MHK817773668993\",\n  \"AppraisalDate\": \"2025-11-27 13:38:51\",\n  \"AppointmentDate\": \"2025-11-29 10:00:00\",\n  \"AppointmentLocation\": \"Mampang Prapatan\",\n  \"PromoCode\": \"RI1708\",\n  \"DP\": \"25000000\",\n  \"Tenor\": \"36 bulan\",\n  \"StatusCode\": \"E0029\",\n  \"CabangPembelian\": \"\",\n  \"TahunPembelian\": \"2025\",\n  \"VariantPembelian\": \"Innova Zenix Hybrid Q Modelista\",\n  \"DropReasonCode\": \"\",\n  \"LimitWAAttempt\": \"\",\n  \"CurrentWAAttempt\": \"\",\n  \"RemainingWAAttempt\": \"\",\n  \"LimitCallAttempt\": \"\",\n  \"CurrentCallAttempt\": \"\",\n  \"RemainingCallAttempt\": \"\",\n  \"LimitDays\": \"\",\n  \"CurrentDays\": \"\",\n  \"RemainingDays\": \"\",\n  \"LeadScoring\": \"\",\n  \"NewLead\": \"\",\n  \"LeadPriority\": \"\",\n  \"VerificatorNotes\": \"\",\n  \"ExpiredLead\": \"\",\n  \"SourceSystemNo\": \"202511270001 UPDATE\",\n  \"SourceSystem\": \"LIVECHAT\",\n  \"AttemptNumber\": \"1\",\n  \"AgentName\": \"ELIS INAYAH\",\n  \"AgentID\": \"AGRELISI0194\",\n  \"StatusCodeActv\": \"E0001\",\n  \"AttemptChannel\": \"B\",\n  \"AttemptStatusCode\": \"A\",\n  \"AttemptDuration\": \"\",\n  \"AttemptDateFrom\": \"2025-11-27T13:15:00Z\",\n  \"AttemptDateTo\": \"2025-11-27T13:15:00Z\",\n  \"AttemptResultCode\": \"\",\n  \"AttemptNotes\": \"LiveChat Assign to Customer\",\n  \"CallRecording\": \"\",\n  \"WAChat\": \"https://wachat\",\n  \"DropReasonCodeActv\": \"\",\n  \"NextActivitySchedule\": \"2025-11-28T17:00:00.000Z\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1008,
+        -512
+      ],
+      "id": "d6b1ef65-97aa-4cba-aab4-a3915d3b6ade",
+      "name": "HTTP Request",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "LxJ1xexv8ufBLrXq",
+          "name": "TokenSupleads"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const picData = $('SelectPICRelated1').first().json;\nconst webhookInput = $('When Executed by Another Workflow').first().json;\nconst now = $now.toISO();\n\nconst formatDate = (date) => {\n  const d = new Date(date);\n  const offset = 7*60; //dalam menit\n  const localDate = new Date(d.getTime() + offset*60*1000);\n  const day = String(localDate.getUTCDate()).padStart(2, '0');\n  const month = String(localDate.getUTCMonth() + 1).padStart(2, '0');\n  const year = localDate.getUTCFullYear();\n  const hours = String(localDate.getUTCHours()).padStart(2, '0');\n  const minutes = String(localDate.getUTCMinutes()).padStart(2, '0');\n  const seconds = String(localDate.getUTCSeconds()).padStart(2, '0');\n  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;\n};\n\nconst leadID = $('Create Leads').first().json.leadNo;\n\nreturn [{\n  json: {\n    PreferredDateToContacted: \"\",\n    CreatedDate: formatDate(new Date()),\n    LeadID: leadID,\n    Title: \"0002\",\n    QuestionnaireCode: \"\",\n    GeneralClassificationCode: \"\",\n    SourceClassementCode: \"\",\n    SourceCode: \"21\",\n    SourceDetailCode: \"S13\",\n    Description: \"\",\n    Name1: webhookInput.customerName,\n    Phone1: webhookInput.customerPhone,\n    Phone2: webhookInput.customerPhone,\n    Email1: \"nan@nan.nan\",\n    ProspectVariant: \"\",\n    PurchasePeriod: \"\",\n    RegionCode: \"\",\n    AreaCode: \"DKI1\",\n    CityCode: \"0013\",\n    BusinessAreaCode: webhookInput.branchCode,\n    Address1: \"\",\n    Kelurahan: \"\",\n    Kecamatan: \"\",\n    KabupatenKota: \"\",\n    Provinsi: \"\",\n    PaymentMethod: \"\",\n    Program: \"\",\n    PreferredAttemptChannel: \"\",\n    PeriodeTenor: \"\",\n    TestDriveDate: \"1900-01-01 00:00:00.000\",\n    SalesmanNo: \"00025386\",\n    MerkMobilLama: \"\",\n    ModelMobilLama: \"\",\n    SilinderMobilLama: \"\",\n    TipeMobilLama: \"\",\n    TransmisiMobilLama: \"\",\n    TahunPembuatanMobilLama: \"\",\n    BahanBakarMobilLama: \"\",\n    PenggerakMobilLama: \"\",\n    WarnaMobilLama: \"\",\n    VINMobilLama: \"\",\n    AppraisalDate: \"1900-01-01 00:00:00.000\",\n    AppointmentDate: \"1900-01-01 00:00:00.000\",\n    AppointmentLocation: \"\",\n    PromoCode: \"\",\n    DP: 0,\n    Tenor: \"\",\n    StatusCode: \"E0001\",\n    CabangPembelian: \"\",\n    TahunPembelian: \"\",\n    VariantPembelian: \"\",\n    DropReasonCode: \"\",\n    LimitWAAttempt: 7,\n    CurrentWAAttempt: 1,\n    RemainingWAAttempt: 6,\n    LimitCallAttempt: 7,\n    CurrentCallAttempt: 7,\n    RemainingCallAttempt: 7,\n    LimitDays: 7,\n    CurrentDays: 0,\n    RemainingDays: 1,\n    LeadScoring: 0,\n    NewLead: \"true\",\n    LeadPriority: \"7\",\n    VerificatorNotes: \"Customer berminat membeli mobil\",\n    ExpiredLead: \"9999-12-31 00:00:00.000\",\n    SourceSystemNo: leadID,\n    SourceSystem: \"LIVECHAT\",\n    AttemptNumber: \"1\",\n    AgentName: picData.user_name,\n    AgentID: picData.user_windows_uid,\n    StatusCodeActv: \"E0001\",\n    AttemptChannel: \"B\",\n    AttemptStatusCode: \"A\",\n    AttemptDuration: \"15\",\n    AttemptDateFrom: now,\n    AttemptDateTo: \"\",\n    AttemptResultCode: \"\",\n    AttemptNotes: \"Customer berminat untuk beli unit\",\n    CallRecording: \"\",\n    WAChat: \"\",\n    DropReasonCodeActv: \"\",\n    NextActivitySchedule: \"1900-01-01T00:00:00.000Z\"\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1168,
+        -144
+      ],
+      "id": "a73e521c-8d37-4ee0-b495-a59271b0d8c6",
+      "name": "Mapfield SupleadsActver"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://astraapigc-dev.astra.co.id/astra-auth/oauth2/token",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "grant_type",
+              "value": "client_credentials"
+            },
+            {
+              "name": "scope",
+              "value": "api://789a7183-2a38-4307-bced-76fbdd8b4a89/.default"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        704,
+        -144
+      ],
+      "id": "110ab068-311e-47f7-adfc-a27bd4051860",
+      "name": "Get Token SupleadsActVerif",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "LxJ1xexv8ufBLrXq",
+          "name": "TokenSupleads"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://astraapigc-dev.astra.co.id/sap-hana/lms_tso/SUPLEADS_ACTVER",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Get Token SupleadsActVerif').first().json.access_token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($('Mapfield SupleadsActver').first().json) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1488,
+        -144
+      ],
+      "id": "72695927-9d6e-4cef-81c6-da501ea70405",
+      "name": "SupleadsActverif"
+    },
+    {
+      "parameters": {
+        "amount": 10
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1376,
+        -384
+      ],
+      "id": "40c50421-32a8-4e5a-b6d1-26a271723af8",
+      "name": "Wait2",
+      "webhookId": "8dbb3e3b-3c96-4745-8ccc-850b93b148be"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT definition\n   FROM pg_matviews\n   WHERE matviewname = 'source_user_role_unit_map';",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2320,
+        416
+      ],
+      "id": "c3cb8754-3509-4b6e-afd3-99bca32b3140",
+      "name": "SelectPICRelated3",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "mhN5H7asJQ4STqAA",
+          "name": "Postgres Aura"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "summary"
+            },
+            {
+              "name": "branchCode"
+            },
+            {
+              "name": "customerName"
+            },
+            {
+              "name": "customerPhone"
+            },
+            {
+              "name": "PoliceRegNo"
+            },
+            {
+              "name": "ConversationId"
+            },
+            {
+              "name": "InitialQuestion"
+            },
+            {
+              "name": "Consent"
+            },
+            {
+              "name": "NextAction"
+            },
+            {
+              "name": "wa_id"
+            },
+            {
+              "name": "InquiryType"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -1392,
+        160
+      ],
+      "id": "6d2a14b7-fbc1-4080-bb91-ca4c5a526c8e",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "customer_sessions",
+          "mode": "list",
+          "cachedResultName": "customer_sessions"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "is_ticket_active": true,
+            "phone_number": "={{ $json.phone_no }}"
+          },
+          "matchingColumns": [
+            "phone_number"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "phone_number",
+              "displayName": "phone_number",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "branch_code",
+              "displayName": "branch_code",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "last_active_at",
+              "displayName": "last_active_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "expired_at",
+              "displayName": "expired_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "mode",
+              "displayName": "mode",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "owner_role",
+              "displayName": "owner_role",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "owner_agent_id",
+              "displayName": "owner_agent_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "claimed_by",
+              "displayName": "claimed_by",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "handoff_at",
+              "displayName": "handoff_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "claimed_at",
+              "displayName": "claimed_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "resolved_at",
+              "displayName": "resolved_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "first_response_at",
+              "displayName": "first_response_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "session_key",
+              "displayName": "session_key",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "is_ticket_active",
+              "displayName": "is_ticket_active",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2608,
+        144
+      ],
+      "id": "0f9abfe4-b25f-4444-a74f-e9fd7cfc1f6b",
+      "name": "update ticket",
+      "credentials": {
+        "postgres": {
+          "id": "mhN5H7asJQ4STqAA",
+          "name": "Postgres Aura"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "summary": "Permintaan test drive Toyota Avanza, namun customer masih ragu dan sudah menyetujui untuk dihubungkan. Cabang telah dikonfirmasi: Auto2000 Yos Sudarso.",
+          "branchCode": "T002",
+          "customerName": "SELINA GYANDA",
+          "customerPhone": "6282135784841",
+          "PoliceRegNo": "",
+          "ConversationId": "6282135784841_bc5a42fc-f968-45df-a4c3-2c24958d0ba2",
+          "InitialQuestion": "Customer menanyakan kapan Avanza bisa ditest drive dan menyampaikan masih ragu.",
+          "Consent": "yes",
+          "NextAction": "• Hubungi customer untuk membantu informasi jadwal test drive Toyota Avanza\n• Berikan penjelasan yang dibutuhkan agar customer lebih yakin\n• Tindak lanjuti sesuai ketersediaan cabang",
+          "wa_id": "wamid.HBgNNjI4MjEzNTc4NDg0MRUCABIYFjNFQjAzRjk3NjZCNjc2OUE2MTNDQTgA",
+          "InquiryType": "konsultasi pembelian mobil leads"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "SelectWAGroup": {
+      "main": [
+        [
+          {
+            "node": "Send Group",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SelectPICRelated": {
+      "main": [
+        [
+          {
+            "node": "Call 'Orion Auth Token Group'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Leads": {
+      "main": [
+        [
+          {
+            "node": "SelectPICRelated1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert ChatbotSummary Table": {
+      "main": [
+        [
+          {
+            "node": "update ticket",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SuppLeads": {
+      "main": [
+        []
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Map Create Leads",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Branch",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Failed Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Map Template": {
+      "main": [
+        [
+          {
+            "node": "Insert ChatbotSummary Table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Map Supleads": {
+      "main": [
+        [
+          {
+            "node": "SuppLeads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Map Create Leads": {
+      "main": [
+        [
+          {
+            "node": "Create Leads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Failed Response": {
+      "main": [
+        []
+      ]
+    },
+    "Success Response": {
+      "main": [
+        []
+      ]
+    },
+    "Send MessagePIC": {
+      "main": [
+        [
+          {
+            "node": "set reminderFollowUp",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Failed Response3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SelectWAGroup1": {
+      "main": [
+        [
+          {
+            "node": "Map Item for group",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'Orion Auth Token Group'": {
+      "main": [
+        [
+          {
+            "node": "Limit",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Map Item For Each PIC",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send MessageGroup": {
+      "main": [
+        [
+          {
+            "node": "Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SelectPICRelated1": {
+      "main": [
+        [
+          {
+            "node": "Get Token SupleadsActVerif",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Map Template",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "SuppLeads1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SuppLeads1": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "SuppLeads2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Map Template",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SuppLeads2": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "Map Template",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Map Template",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit": {
+      "main": [
+        [
+          {
+            "node": "SelectWAGroup1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Map Item For Each PIC": {
+      "main": [
+        [
+          {
+            "node": "Send MessagePIC",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "set reminderFollowUp": {
+      "main": [
+        [
+          {
+            "node": "Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Map Item for group": {
+      "main": [
+        [
+          {
+            "node": "Send MessageGroup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check branchCode Validation": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Failed Response1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Failed Response1": {
+      "main": [
+        []
+      ]
+    },
+    "Check branchCode Validation1": {
+      "main": [
+        [
+          {
+            "node": "Check branchCode Validation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Failed Response2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Failed Response2": {
+      "main": [
+        []
+      ]
+    },
+    "Failed Response3": {
+      "main": [
+        []
+      ]
+    },
+    "Mapfields ActVerif": {
+      "main": [
+        [
+          {
+            "node": "ActVerification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ActVerification": {
+      "main": [
+        [
+          {
+            "node": "Map Supleads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Branch": {
+      "main": [
+        [
+          {
+            "node": "Check BP & GR",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check BP & GR": {
+      "main": [
+        [
+          {
+            "node": "Failed Response4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Map Template",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Failed Response4": {
+      "main": [
+        []
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create leads id success?": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mapfield SupleadsActver": {
+      "main": [
+        [
+          {
+            "node": "SupleadsActverif",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Token SupleadsActVerif": {
+      "main": [
+        [
+          {
+            "node": "Mapfield SupleadsActver",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SupleadsActverif": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait2": {
+      "main": [
+        []
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Check branchCode Validation1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "update ticket": {
+      "main": [
+        [
+          {
+            "node": "SelectPICRelated",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "86ad6073-4ef0-4af9-87d2-812536ea2f82",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "81c1049505da9c7896ede39e48d0ef8d9c24db24fd26dc0a2d45640b77e155ef"
+  },
+  "id": "Ro2PX3WQ0MOuxy3t",
+  "tags": []
+}
