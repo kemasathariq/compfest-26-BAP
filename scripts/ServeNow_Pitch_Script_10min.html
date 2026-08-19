@@ -1,0 +1,593 @@
+<title>ServeNow Pitch Script</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400;1,8..60,600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --paper:#f6f6fb;
+    --paper-raised:#ffffff;
+    --ink:#1b1b2f;
+    --muted:#5b5c72;
+    --faint:#8b8ca4;
+    --line:#dcdce6;
+    --accent:#4a3fb0;
+    --accent-ink:#ffffff;
+    --accent-soft:#eeecfa;
+    --teal:#1f7a6c;
+    --teal-soft:#e5f3ef;
+    --amber:#a6660a;
+    --amber-soft:#fbf0dd;
+    --shadow: 0 1px 2px rgba(27,27,47,.04), 0 8px 24px -12px rgba(27,27,47,.12);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#141420;
+      --paper-raised:#1b1b2c;
+      --ink:#ece9fb;
+      --muted:#a3a3c0;
+      --faint:#6e6e8c;
+      --line:#2c2c42;
+      --accent:#a89bff;
+      --accent-ink:#1b1330;
+      --accent-soft:#2a2350;
+      --teal:#5fd9c2;
+      --teal-soft:#16332e;
+      --amber:#e0aa5c;
+      --amber-soft:#3a2c14;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 28px -12px rgba(0,0,0,.55);
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#141420;
+    --paper-raised:#1b1b2c;
+    --ink:#ece9fb;
+    --muted:#a3a3c0;
+    --faint:#6e6e8c;
+    --line:#2c2c42;
+    --accent:#a89bff;
+    --accent-ink:#1b1330;
+    --accent-soft:#2a2350;
+    --teal:#5fd9c2;
+    --teal-soft:#16332e;
+    --amber:#e0aa5c;
+    --amber-soft:#3a2c14;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 28px -12px rgba(0,0,0,.55);
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:"Source Serif 4", Georgia, "Times New Roman", serif;
+    -webkit-font-smoothing:antialiased;
+    line-height:1.55;
+  }
+  .wrap{max-width:900px; margin:0 auto; padding:56px 24px 96px;}
+
+  .label{
+    font-family:"Archivo", "Helvetica Neue", Arial, sans-serif;
+    text-transform:uppercase;
+    letter-spacing:.09em;
+    font-size:.72rem;
+    font-weight:700;
+  }
+  .mono{ font-family:"IBM Plex Mono", ui-monospace, monospace; font-variant-numeric:tabular-nums; }
+
+  /* ---------- Cover ---------- */
+  .cover{ margin-bottom:44px; }
+  .cover .eyebrow{ color:var(--accent); margin-bottom:14px; }
+  .cover h1{
+    font-family:"Archivo", sans-serif;
+    font-weight:800;
+    font-size:clamp(1.8rem, 4vw, 2.6rem);
+    line-height:1.1;
+    letter-spacing:-.01em;
+    text-wrap:balance;
+    margin:0 0 12px;
+  }
+  .cover .sub{
+    font-size:1.08rem;
+    color:var(--muted);
+    max-width:62ch;
+    margin:0 0 26px;
+  }
+  .cover .metarow{
+    display:flex; flex-wrap:wrap; gap:10px;
+  }
+  .chip{
+    font-family:"Archivo", sans-serif;
+    font-size:.78rem; font-weight:600;
+    padding:7px 13px;
+    border-radius:100px;
+    background:var(--paper-raised);
+    border:1px solid var(--line);
+    color:var(--muted);
+    display:flex; align-items:center; gap:6px;
+  }
+  .chip b{ color:var(--ink); font-weight:700; }
+  .chip .dot{ width:6px; height:6px; border-radius:50%; background:var(--accent); flex:none; }
+
+  /* ---------- Panels ---------- */
+  .panel{
+    background:var(--paper-raised);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:24px 26px;
+    box-shadow:var(--shadow);
+    margin-bottom:20px;
+  }
+  .panel h2{
+    font-family:"Archivo", sans-serif;
+    font-size:1rem;
+    font-weight:700;
+    margin:0 0 14px;
+    display:flex; align-items:center; gap:9px;
+  }
+  .panel h2 .num{ color:var(--accent); font-family:"IBM Plex Mono", monospace; font-size:.85rem; }
+
+  .tips-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(200px,1fr));
+    gap:14px 22px;
+  }
+  .tips-grid div{ font-size:.94rem; }
+  .tips-grid .k{
+    font-family:"Archivo", sans-serif; font-weight:700; font-size:.78rem;
+    text-transform:uppercase; letter-spacing:.06em; color:var(--teal);
+    margin-bottom:4px; display:block;
+  }
+  .tips-grid p{ margin:0; color:var(--muted); }
+
+  table.speakers{ width:100%; border-collapse:collapse; font-size:.94rem; }
+  table.speakers th{
+    font-family:"Archivo", sans-serif; font-size:.72rem; text-transform:uppercase;
+    letter-spacing:.06em; color:var(--faint); text-align:left; font-weight:700;
+    padding:0 10px 8px; border-bottom:1px solid var(--line);
+  }
+  table.speakers td{ padding:9px 10px; border-bottom:1px solid var(--line); vertical-align:top; }
+  table.speakers tr:last-child td{ border-bottom:none; }
+  table.speakers td.time{ font-family:"IBM Plex Mono", monospace; color:var(--muted); white-space:nowrap; }
+  .overflow-x{ overflow-x:auto; }
+
+  /* ---------- Timeline / slide sections ---------- */
+  .timeline{
+    margin-top:36px;
+    position:relative;
+  }
+  .timeline-head{
+    display:flex; align-items:baseline; justify-content:space-between;
+    margin-bottom:18px; gap:12px; flex-wrap:wrap;
+  }
+  .timeline-head h2{
+    font-family:"Archivo", sans-serif; font-size:1.15rem; font-weight:800; margin:0;
+  }
+  .timeline-head .runtime{ color:var(--faint); font-size:.85rem; }
+
+  .slide-row{
+    display:grid;
+    grid-template-columns:74px 1fr;
+    gap:0 18px;
+    position:relative;
+  }
+  .rail{
+    position:relative;
+    display:flex; flex-direction:column; align-items:center;
+  }
+  .rail::before{
+    content:"";
+    position:absolute; top:6px; bottom:-14px; left:50%;
+    width:2px; background:var(--line); transform:translateX(-50%);
+  }
+  .slide-row:last-child .rail::before{ display:none; }
+  .rail .pt{
+    width:13px; height:13px; border-radius:50%;
+    background:var(--accent); border:3px solid var(--paper);
+    box-shadow:0 0 0 1.5px var(--accent);
+    margin-top:2px; z-index:1;
+  }
+  .rail .cum{
+    font-family:"IBM Plex Mono", monospace;
+    font-size:.7rem; color:var(--faint); margin-top:6px;
+    writing-mode:horizontal-tb;
+  }
+
+  .card{
+    background:var(--paper-raised);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:22px 24px 24px;
+    box-shadow:var(--shadow);
+    margin-bottom:30px;
+  }
+  .card-head{
+    display:flex; justify-content:space-between; align-items:flex-start;
+    gap:14px; margin-bottom:6px; flex-wrap:wrap;
+  }
+  .card-head .titles{ min-width:0; }
+  .slide-no{
+    font-family:"IBM Plex Mono", monospace; color:var(--accent);
+    font-size:.78rem; font-weight:600; letter-spacing:.03em;
+  }
+  .card h3{
+    font-family:"Archivo", sans-serif; font-weight:700; font-size:1.22rem;
+    margin:2px 0 3px; letter-spacing:-.005em; text-wrap:balance;
+  }
+  .headline{
+    font-size:.87rem; color:var(--muted); font-style:italic; margin:0;
+    max-width:56ch;
+  }
+  .timebadge{
+    font-family:"IBM Plex Mono", monospace; font-size:.78rem; font-weight:600;
+    background:var(--accent-soft); color:var(--accent);
+    padding:5px 11px; border-radius:8px; white-space:nowrap; flex:none;
+  }
+
+  .script{
+    margin-top:16px;
+    font-size:1.05rem;
+    line-height:1.68;
+    max-width:66ch;
+  }
+  .script p{ margin:0 0 14px; }
+  .script p:last-child{ margin-bottom:0; }
+  .beat{ color:var(--faint); font-style:italic; }
+  .en{ color:var(--ink); }
+
+  .note{
+    margin-top:16px;
+    padding:11px 14px;
+    background:var(--teal-soft);
+    border-left:3px solid var(--teal);
+    border-radius:0 8px 8px 0;
+    font-family:"Archivo", sans-serif;
+    font-size:.83rem;
+    color:var(--ink);
+    display:flex; gap:8px;
+  }
+  .note b{ color:var(--teal); flex:none; }
+  .note.amber{ background:var(--amber-soft); border-left-color:var(--amber); }
+  .note.amber b{ color:var(--amber); }
+
+  .wordcount{
+    margin-top:14px; font-family:"IBM Plex Mono", monospace; font-size:.72rem; color:var(--faint);
+  }
+
+  .skip-card{
+    border:1px dashed var(--line);
+    border-radius:14px;
+    padding:18px 22px;
+    color:var(--muted);
+    font-size:.92rem;
+    background:transparent;
+    margin-top:6px;
+  }
+  .skip-card b{ color:var(--ink); font-family:"Archivo", sans-serif; }
+
+  footer{
+    margin-top:44px;
+    padding-top:22px;
+    border-top:1px solid var(--line);
+    font-size:.85rem;
+    color:var(--faint);
+  }
+  footer p{ margin:0 0 6px; }
+
+  @media (max-width:600px){
+    .slide-row{ grid-template-columns:40px 1fr; }
+    .rail .cum{ font-size:.6rem; }
+    .card{ padding:18px 16px 20px; }
+  }
+</style>
+
+<div class="wrap">
+
+  <section class="cover">
+    <div class="eyebrow label">COMPFEST 2026 · Business IT Case Competition · Team BAP</div>
+    <h1>ServeNow 2.0 — the 10-minute pitch script</h1>
+    <p class="sub">Word-for-word delivery script for the ServeNow × BAP deck, slide by slide, in the bilingual Indonesian–English register most judge panels actually hear in the room — full Indonesian for warmth and framing, English for the technical spine and every number.</p>
+    <div class="metarow">
+      <span class="chip"><span class="dot"></span>Runtime <b>≈10:00–10:15</b></span>
+      <span class="chip">Pace <b>145–155 wpm</b></span>
+      <span class="chip">Slides <b>1–11</b> live, <b>12–16</b> reserve</span>
+      <span class="chip">Presenters <b>3</b></span>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2><span class="num">§1</span> How this script is built</h2>
+    <div class="tips-grid">
+      <div>
+        <span class="k">Bilingual by design</span>
+        <p>Narrative, transitions and rapport-building lines run in Indonesian — that's what a live room actually relaxes into. Every metric, architecture term and proper noun (SLA, n8n, Qdrant RAG, FTE) stays in English, matched exactly to the deck's own wording so nothing sounds translated.</p>
+      </div>
+      <div>
+        <span class="k">Say it, don't read it</span>
+        <p>This is a memorization aid, not a teleprompter script. Read each slide's block twice, then paraphrase in your own words — the <em>beat</em> notes tell you what has to land, not which syllable to hit.</p>
+      </div>
+      <div>
+        <span class="k">Timing is a target, not a cage</span>
+        <p>Each slide carries a time budget at 145–155 words/minute. Rehearse against a stopwatch twice; then trust your own rhythm over the clock in the room.</p>
+      </div>
+      <div>
+        <span class="k">Slides 12–16 are reserve</span>
+        <p>References and the four appendix slides (SOP, implementation plan, mockup, financial detail) exist for Q&amp;A, not the timed run — click through fast or skip, and pull from them only if a judge asks.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2><span class="num">§2</span> Suggested speaker split</h2>
+    <div class="overflow-x">
+      <table class="speakers">
+        <thead>
+          <tr><th>Presenter</th><th>Carries</th><th>Slides</th><th>Time</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Kemas M. A.</td><td>Opens the hook, frames the whole case, then returns to close it on the money slides — bookend structure keeps the strongest narrative arc with one voice.</td><td>1, 2, 3 → 9, 10, 11</td><td class="time">≈4:10</td></tr>
+          <tr><td>Atria C. T.</td><td>The two build-heavy pillars — governance architecture and the product mechanics — where the technical detail is thickest.</td><td>4, 5</td><td class="time">≈2:55</td></tr>
+          <tr><td>Brilian K. P.</td><td>Sales engine into risk into timeline — the "so it also works" run that closes the credibility loop before the money slides.</td><td>6, 7, 8</td><td class="time">≈3:05</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="margin:14px 0 0; font-size:.85rem; color:var(--faint);">Flexible — reassign freely. The one rule worth keeping: whoever opens should also close, so the room's last impression matches the first.</p>
+  </section>
+
+  <div class="timeline">
+    <div class="timeline-head">
+      <h2>The script</h2>
+      <span class="runtime mono">00:00 → 10:15</span>
+    </div>
+
+    <!-- SLIDE 1 -->
+    <div class="slide-row">
+      <div class="rail"><div class="pt"></div><div class="cum">0:00</div></div>
+      <div class="card">
+        <div class="card-head">
+          <div class="titles">
+            <div class="slide-no">SLIDE 1 / 11</div>
+            <h3>Title — ServeNow 2.0</h3>
+            <p class="headline">From Founder Bandwidth to System Throughput</p>
+          </div>
+          <span class="timebadge">0:00–0:25</span>
+        </div>
+        <div class="script">
+          <p><span class="beat">[Stand still. Beat of silence before you speak.]</span> Selamat pagi, Bapak dan Ibu juri yang kami hormati. <span class="beat">[pause]</span> Bayangkan sebuah perusahaan dengan <span class="en">78 karyawan</span> — tapi setiap keputusan, besar maupun kecil, masih harus lewat tangan tiga orang yang sama. <span class="en">That's ServeNow, today.</span></p>
+          <p>Kami dari tim <span class="en">BAP</span> — saya Kemas, bersama Atria dan Brilian. Hari ini kami akan present: <span class="en">ServeNow 2.0 — From Founder Bandwidth to System Throughput.</span></p>
+        </div>
+        <div class="note"><b>Delivery</b> Don't rush the opening line — the "78 people, 3 people" contrast is the whole case in one sentence. Let it sit for a second before moving on.</div>
+        <div class="wordcount">~60 words</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 2 -->
+    <div class="slide-row">
+      <div class="rail"><div class="pt"></div><div class="cum">0:25</div></div>
+      <div class="card">
+        <div class="card-head">
+          <div class="titles">
+            <div class="slide-no">SLIDE 2 / 11</div>
+            <h3>Executive Summary</h3>
+            <p class="headline">Restructuring ServeNow's Governance and Escalation Architecture</p>
+          </div>
+          <span class="timebadge">0:25–1:35</span>
+        </div>
+        <div class="script">
+          <p>Jadi, apa masalahnya? <span class="en">ServeNow</span> saat ini beroperasi <span class="en">without a governance model.</span> <span class="en">78 staff</span>, effectively reporting ke tiga direktur, yang masing-masing memegang <span class="en">5 to 8 roles</span> sekaligus. <span class="en">Throughput</span> perusahaan ini sepenuhnya bottlenecked oleh <span class="en">director bandwidth.</span></p>
+          <p>Kita identifikasi tiga masalah inti: <span class="en">no ownership state</span> — nobody knows who owns a conversation. <span class="en">No accountability</span> — unclaimed work just sits there. Dan <span class="en">cost &amp; visibility leak</span> — koordinasi internal bocor ke channel <span class="en">WhatsApp</span> yang <span class="en">metered.</span></p>
+          <p>Maka pertanyaan kuncinya: <span class="beat">[slow down here, this is the thesis]</span> <span class="en">how can ServeNow relocate capability, decision rights, and customer trust</span> dari tiga <span class="en">founder</span> ke sebuah sistem yang <span class="en">accountable</span> — sambil mendorong <span class="en">SLA compliance</span> ke <span class="en">96%?</span></p>
+          <p>Jawaban kami, tiga <span class="en">pillar: Governance &amp; Escalation Architecture, Single-Number GenAI Omnichannel,</span> dan <span class="en">AI-Qualified Lead Engine &amp; Expansion.</span> Dan hasilnya sudah terukur — <span class="en">SLA +18 points, churn −70%, employees-per-customer −24%, implementation time −55%, revenue outside Jabodetabek &gt;40%.</span></p>
+        </div>
+        <div class="note"><b>Delivery</b> Land each impact number as its own beat — a half-second gap between them, not a run-on list. This is the slide judges write numbers down from.</div>
+        <div class="wordcount">~185 words</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 3 -->
+    <div class="slide-row">
+      <div class="rail"><div class="pt"></div><div class="cum">1:35</div></div>
+      <div class="card">
+        <div class="card-head">
+          <div class="titles">
+            <div class="slide-no">SLIDE 3 / 11</div>
+            <h3>Background Analysis — Issue Tree</h3>
+            <p class="headline">Nine root causes, one conclusion: ownership state and escalation instruments are missing</p>
+          </div>
+          <span class="timebadge">1:35–2:35</span>
+        </div>
+        <div class="script">
+          <p>Kenapa masalah ini bisa terjadi? Kami breakdown jadi <span class="en">nine root causes,</span> tiga kategori, fully <span class="en">MECE</span> — <span class="en">Governance &amp; Escalation, Product &amp; Cost Architecture,</span> dan <span class="en">Sales &amp; Customer Trust.</span></p>
+          <p>Contohnya: literally nothing records who owns a chat. <span class="en">SLA</span>-nya satu angka flat untuk semua kategori, jadi kerjaan bisa nganggur sampai ada yang notice manual. Koordinasi internal bocor ke <span class="en">WhatsApp channel</span> yang <span class="en">metered</span> — bayar per anggota tim. Dan revenue masih menempel di relasi pribadi <span class="en">founder</span> — itu yang block <span class="en">delegation</span> dan ekspansi geografis.</p>
+          <p><span class="beat">[this is the pivot line — say it directly to the panel]</span> Tapi insight kuncinya di sini: ketiga <span class="en">pillar</span> ini bukan <span class="en">parallel workstream. Governance</span> adalah <span class="en">enabling layer</span> — dia yang menciptakan <span class="en">decision capacity</span> dan <span class="en">named ownership</span> yang dibutuhkan <span class="en">Product</span> dan <span class="en">Sales</span> untuk bisa berjalan sama sekali. Fix ownership first — baru yang lain mengikuti.</p>
+        </div>
+        <div class="note"><b>Delivery</b> The pivot line ("Governance is the enabling layer") is your whole deck's logic in one sentence — make eye contact across the panel while saying it.</div>
+        <div class="wordcount">~150 words</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 4 -->
+    <div class="slide-row">
+      <div class="rail"><div class="pt"></div><div class="cum">2:35</div></div>
+      <div class="card">
+        <div class="card-head">
+          <div class="titles">
+            <div class="slide-no">SLIDE 4 / 11</div>
+            <h3>Pillar I — Governance &amp; Escalation Architecture</h3>
+            <p class="headline">An atomic claim protocol and a four-layer operating model</p>
+          </div>
+          <span class="timebadge">2:35–4:10</span>
+        </div>
+        <div class="script">
+          <p>Masuk ke <span class="en">Pillar</span> satu: <span class="en">Governance &amp; Escalation Architecture.</span> Ini jantungnya seluruh transformasi.</p>
+          <p><span class="en">How work moves</span> — <span class="beat">[point to the flow diagram, left to right]</span> pesan pelanggan masuk, di-<span class="en">route</span> lewat <span class="en">mode gate,</span> lalu <span class="en">first qualified owner</span> claim, jadi <span class="en">accountable owner.</span> Simpel, tapi powerful — <span class="en">claim</span>-nya atomic, jadi tidak ada dua orang yang bisa klaim percakapan yang sama.</p>
+          <p><span class="en">Who owns it</span> — target <span class="en">operating model</span> kami: <span class="en">3 Directors</span> fokus di <span class="en">strategy</span> dan <span class="en">exceptions</span> saja. Di bawahnya, <span class="en">6 Functional Owners</span> baru yang <span class="en">own outcomes within defined boundaries. Team Leads coordinate execution.</span> Dan <span class="en">78 staff</span> yang sudah ada, jumlahnya tetap sama, tapi sekarang punya <span class="en">named manager</span> yang jelas.</p>
+          <p><span class="en">Bounded decision rights</span> — keputusan rutin selesai di level <span class="en">functional owner.</span> Kalau ada <span class="en">SLA risk, team lead</span> yang <span class="en">coordinates recovery.</span> Baru kalau sudah <span class="en">exception</span> atau <span class="en">breach, director</span> turun tangan — <span class="en">intervenes only when escalated.</span></p>
+          <p>Hasilnya? <span class="en">Routine decisions move down, exceptions move up,</span> dan <span class="en">every handoff stays auditable.</span> Ini bukan sekadar <span class="en">org chart</span> baru — ini sistem yang punya <span class="en">memory.</span></p>
+        </div>
+        <div class="note"><b>Delivery</b> Slowest, most deliberate slide in the deck — this is the load-bearing pillar. Use the diagram as your anchor: point, don't just talk over it.</div>
+        <div class="wordcount">~225 words</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 5 -->
+    <div class="slide-row">
+      <div class="rail"><div class="pt"></div><div class="cum">4:10</div></div>
+      <div class="card">
+        <div class="card-head">
+          <div class="titles">
+            <div class="slide-no">SLIDE 5 / 11</div>
+            <h3>Pillar II — Single-Number GenAI Omnichannel</h3>
+            <p class="headline">One WhatsApp number, an AI classifier, and zero internal coordination cost</p>
+          </div>
+          <span class="timebadge">4:10–5:30</span>
+        </div>
+        <div class="script">
+          <p><span class="en">Pillar</span> dua: <span class="en">Single-Number GenAI Omnichannel.</span> Apa itu? Satu nomor <span class="en">WhatsApp.</span> <span class="en">Bot</span> handle <span class="en">FAQ</span> dan langsung <span class="en">handoff</span> ke <span class="en">shared agent console</span> — instan.</p>
+          <p>Cara kerjanya, lima langkah: <span class="en">inbound query</span> masuk di satu nomor. <span class="en">n8n router</span> dan <span class="en">LLM classify</span> intent-nya — <span class="en">FAQ, lead,</span> atau <span class="en">complaint. Qdrant RAG</span> langsung resolve <span class="en">FAQ</span> tanpa perlu <span class="en">agent.</span> Kalau <span class="en">complex lead</span> atau <span class="en">complaint,</span> trigger <span class="en">handoff</span> ke <span class="en">web console.</span> Dan <span class="en">agent</span> pertama yang <span class="en">claim,</span> dia yang handle — semua <span class="en">event</span> ter-<span class="en">log</span> untuk <span class="en">SLA audit.</span></p>
+          <p>Kenapa ini penting? Kita eliminate <span class="en">WhatsApp group</span> yang mahal itu — obrolan internal pindah ke channel gratis. <span class="en">Qdrant vector search</span> resolve <span class="en">FAQ</span> tanpa manusia sama sekali. Pelanggan tetap dapat satu <span class="en">continuous thread,</span> walau di belakang layar, <span class="en">lead</span>-nya di-<span class="en">broadcast</span> ke semua <span class="en">agent</span> — gratis. Dan <span class="en">direct-SQL</span> antara <span class="en">n8n</span> dan <span class="en">Postgres,</span> tanpa <span class="en">REST layer,</span> supaya kita hit target <span class="en">rollout 6 to 10 weeks.</span></p>
+        </div>
+        <div class="note"><b>Delivery</b> "Direct-SQL, no REST layer" reads as a throwaway line but it's the technical justification for the 6–10 week claim — don't rush past it.</div>
+        <div class="wordcount">~185 words</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 6 -->
+    <div class="slide-row">
+      <div class="rail"><div class="pt"></div><div class="cum">5:30</div></div>
+      <div class="card">
+        <div class="card-head">
+          <div class="titles">
+            <div class="slide-no">SLIDE 6 / 11</div>
+            <h3>Pillar III — AI-Qualified Lead Engine &amp; Expansion</h3>
+            <p class="headline">AI hunts, humans harvest — every account gets a named owner</p>
+          </div>
+          <span class="timebadge">5:30–6:55</span>
+        </div>
+        <div class="script">
+          <p><span class="en">Pillar</span> tiga: <span class="en">AI-Qualified Lead Engine &amp; Expansion.</span> Filosofinya simpel — <span class="en">AI does the hunting, humans do the harvesting.</span></p>
+          <p><span class="en">AI</span> mengualifikasi <span class="en">inbound interest</span> 24 jam nonstop — <span class="en">high intent</span> versus <span class="en">unclear intent. Qualified leads</span> masuk ke <span class="en">pipeline dashboard</span> milik <span class="en">Head of Sales,</span> target-nya <span class="en">3× coverage. Account executive</span> baru masuk untuk <span class="en">demo, proposal, negotiate, close.</span> Dan setiap akun dapat <span class="en">named institutional owner</span> — bukan lagi <span class="en">founder.</span></p>
+          <p>Kenapa ini penting? Sekarang <span class="en">CEO</span> masih negosiasi <span class="en">pricing</span> secara personal untuk semua <span class="en">deal.</span> Dengan sistem ini, <span class="en">Head of Sales</span> yang absorb <span class="en">routine deals</span> dalam <span class="en">band</span> diskon <span class="en">−15%</span> — kapasitas <span class="en">founder</span> pun terbebas. <span class="en">Named ownership</span> juga yang mulai membangun <span class="en">institutional trust</span> — kunci untuk ekspansi ke luar <span class="en">Jabodetabek.</span></p>
+          <p><span class="en">Go-to-market</span>-nya: <span class="en">cloud-only delivery,</span> jadi tidak perlu kantor fisik per <span class="en">region. B2B</span> digital marketing lewat <span class="en">LinkedIn,</span> target <span class="en">regional corporates.</span> Dan <span class="en">positioning</span> kami jelas — <span class="en">AI Omnichannel that eliminates WhatsApp Group Handoff cost,</span> langsung berhadapan dengan kompetitor global yang mahal dan <span class="en">rigid,</span> atau lokal yang agresif tapi kurang <span class="en">AI-native.</span></p>
+        </div>
+        <div class="note"><b>Delivery</b> "AI hunts, humans harvest" is the quotable line — say it slightly slower and let it be the thing judges remember about Pillar III.</div>
+        <div class="wordcount">~205 words</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 7 -->
+    <div class="slide-row">
+      <div class="rail"><div class="pt"></div><div class="cum">6:55</div></div>
+      <div class="card">
+        <div class="card-head">
+          <div class="titles">
+            <div class="slide-no">SLIDE 7 / 11</div>
+            <h3>Risk &amp; Mitigations</h3>
+            <p class="headline">Every pillar carries a defined trigger and mitigation protocol</p>
+          </div>
+          <span class="timebadge">6:55–7:45</span>
+        </div>
+        <div class="script">
+          <p>Tentu, transformasi sebesar ini punya risiko. Kami map setiap <span class="en">pillar</span> ke <span class="en">potential risk</span> dan <span class="en">mitigation</span>-nya masing-masing.</p>
+          <p>Yang paling <span class="en">critical:</span> enam <span class="en">Functional Owner</span> baru bisa <span class="en">underperform</span> di dua kuartal pertama, dan <span class="en">founder</span> mungkin sulit genuinely melepas otoritas setelah tiga tahun memegang kendali langsung. Mitigasinya? <span class="en">Written decision thresholds, Shadow-to-Solo Gate,</span> dan <span class="en">Decision Rights Matrix</span> yang <span class="en">binding</span> — bukan sekadar <span class="en">advisory.</span></p>
+          <p>Untuk risiko teknis — misalnya <span class="en">bot</span> masih reply setelah <span class="en">chat</span> di-<span class="en">claim</span> — kami hard-gate di level <span class="en">workflow,</span> tested explicitly sebelum <span class="en">production.</span> Intinya: <span class="en">effective risk mitigation</span> butuh <span class="en">continuous validation, flexible guardrails,</span> dan <span class="en">hybrid approach</span> — bukan perbaikan sekali jalan.</p>
+        </div>
+        <div class="note"><b>Delivery</b> This slide reassures, it doesn't alarm — keep the tone matter-of-fact. You already have the mitigation for every risk you name, so say the risk plainly.</div>
+        <div class="wordcount">~130 words</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 8 -->
+    <div class="slide-row">
+      <div class="rail"><div class="pt"></div><div class="cum">7:45</div></div>
+      <div class="card">
+        <div class="card-head">
+          <div class="titles">
+            <div class="slide-no">SLIDE 8 / 11</div>
+            <h3>Timeline &amp; KPIs</h3>
+            <p class="headline">12 months from planning to full rollout, tracked by KPIs</p>
+          </div>
+          <span class="timebadge">7:45–8:35</span>
+        </div>
+        <div class="script">
+          <p><span class="en">Timeline</span>-nya 12 bulan, tiga <span class="en">swim-lane</span> paralel per <span class="en">pillar.</span> Tapi ingat — bulan nol sampai enam itu sepenuhnya tentang menciptakan penerima otoritas. Tidak ada <span class="en">structural change</span> yang <span class="en">compound</span> sebelum <span class="en">management layer</span>-nya ada. Setiap inisiatif fase dua dan tiga itu <span class="en">conditional</span> — baru jalan kalau para <span class="en">Head</span> di fase satu sudah <span class="en">in role.</span></p>
+          <p><span class="beat">[count these off on your fingers if it helps the pace]</span> Target <span class="en">KPI</span> kami jelas: <span class="en">SLA attainment</span> minimal <span class="en">96%, churn</span> di bawah <span class="en">5%, employees-per-customer</span> maksimal <span class="en">1.41, implementation time 6 to 10 weeks, net margin 15 to 20%,</span> dan <span class="en">revenue</span> menembus <span class="en">Rp45 billion</span> — dengan <span class="en">40%</span> darinya dari luar <span class="en">Jabodetabek.</span></p>
+        </div>
+        <div class="note"><b>Delivery</b> Fastest slide in the deck by design — it's a recap, not new information. Keep energy up so it doesn't drag.</div>
+        <div class="wordcount">~120 words</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 9 -->
+    <div class="slide-row">
+      <div class="rail"><div class="pt"></div><div class="cum">8:35</div></div>
+      <div class="card">
+        <div class="card-head">
+          <div class="titles">
+            <div class="slide-no">SLIDE 9 / 11</div>
+            <h3>Financial Projection — From Governance to Financial Impact</h3>
+            <p class="headline">Two governance-owned benefits, valued conservatively</p>
+          </div>
+          <span class="timebadge">8:35–9:20</span>
+        </div>
+        <div class="script">
+          <p>Sekarang, angka-angkanya. Dari <span class="en">governance</span> ini saja, ada dua <span class="en">benefit</span> utama. Pertama, <span class="en">capacity efficiency</span> — kami recover sekitar <span class="en">22 FTE-equivalent capacity,</span> senilai <span class="en">Rp3.57 billion</span> per tahun dalam <span class="en">avoided labour cost.</span> Kedua, <span class="en">churn avoidance</span> — <span class="en">governance's bounded share</span> saja, retaining <span class="en">8.4 customers,</span> senilai <span class="en">Rp1.896 billion</span> per tahun.</p>
+          <p>Total <span class="en">gross annual benefit</span> di tahun ketiga: <span class="en">Rp5.47 billion.</span> <span class="beat">[pause — let the honesty land]</span> Dan yang penting, angka ini belum termasuk <span class="en">revenue growth</span> ke <span class="en">Rp45 billion, faster implementation,</span> atau <span class="en">expansion revenue.</span> Itu murni milik <span class="en">Product</span> dan <span class="en">Sales.</span> Ini betul-betul <span class="en">governance-owned share</span> saja — <span class="en">conservative by design.</span></p>
+        </div>
+        <div class="note"><b>Delivery</b> "Conservative by design" is a credibility line, not filler — it's the thing that stops a judge asking "did you inflate this?" before they ask it.</div>
+        <div class="wordcount">~115 words</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 10 -->
+    <div class="slide-row">
+      <div class="rail"><div class="pt"></div><div class="cum">9:20</div></div>
+      <div class="card">
+        <div class="card-head">
+          <div class="titles">
+            <div class="slide-no">SLIDE 10 / 11</div>
+            <h3>Financial Projection — Investment Case &amp; Return</h3>
+            <p class="headline">Rp384M in, Rp3.73B/yr out, 19-month payback</p>
+          </div>
+          <span class="timebadge">9:20–9:50</span>
+        </div>
+        <div class="script">
+          <p>Dari sisi investasi: <span class="en">one-time implementation cost</span> hanya <span class="en">Rp384 million,</span> di tahun pertama saja. <span class="en">Year-3 net benefit, Rp3.73 billion</span> per tahun. <span class="en">ROI</span> tahun ketiga <span class="en">215%, payback period</span> cuma <span class="en">19 months.</span> Bahkan di skenario <span class="en">conservative,</span> kami masih <span class="en">breakeven</span> dalam tiga tahun. Di skenario <span class="en">upside, ROI</span>-nya bisa tembus <span class="en">325%</span> dengan <span class="en">payback</span> hanya <span class="en">4 months.</span></p>
+        </div>
+        <div class="note"><b>Delivery</b> Say the ROI numbers slowly and clearly — this is the slide a judge circles on their notepad. Don't let it blur into the previous slide's numbers.</div>
+        <div class="wordcount">~80 words</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 11 -->
+    <div class="slide-row">
+      <div class="rail"><div class="pt"></div><div class="cum">9:50</div></div>
+      <div class="card">
+        <div class="card-head">
+          <div class="titles">
+            <div class="slide-no">SLIDE 11 / 11</div>
+            <h3>Thank You</h3>
+            <p class="headline">Close on the thesis, not the numbers</p>
+          </div>
+          <span class="timebadge">9:50–10:10</span>
+        </div>
+        <div class="script">
+          <p>Jadi kesimpulannya: <span class="en">ServeNow</span> tidak butuh <span class="en">org chart</span> yang lebih besar. <span class="en">ServeNow</span> butuh sistem yang bisa dipercaya untuk mengambil keputusan — <span class="en">governance, product,</span> dan <span class="en">sales</span> yang saling menguatkan satu sama lain. <span class="beat">[smile, open posture, look across the whole panel]</span> Kami dari tim <span class="en">BAP</span> — terima kasih. <span class="en">We're ready for your questions.</span></p>
+        </div>
+        <div class="note"><b>Delivery</b> Hold eye contact through the last word instead of looking down to advance the slide — the close is a decision, not a trail-off.</div>
+        <div class="wordcount">~55 words</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="skip-card">
+    <b>Slides 12–16 — References &amp; Appendix.</b> Not part of the timed run. Click through in under 5 seconds each ("full citations and SOP detail are in the appendix") and only stop to expand one if a judge names it in Q&amp;A — the SOP index, the implementation workbook, the audio mockup, and the financial detail workbook are all sourced and ready to open live.
+  </div>
+
+  <footer>
+    <p><b>Before you walk in:</b> two full run-throughs against a stopwatch, out loud, standing up — silent read-throughs don't expose the sentences that trip on air. If a run comes in over 10:15, cut inside Slide 7 (Risk) or Slide 8 (Timeline) first — they're the recap slides, judges forgive a faster pace there before they'll forgive a rushed Pillar I or a rushed close.</p>
+    <p class="mono">ServeNow 2.0 · BAP · COMPFEST 2026 Business IT Case Competition</p>
+  </footer>
+
+</div>
